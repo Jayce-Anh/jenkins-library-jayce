@@ -32,7 +32,7 @@ def call(Map params) {
             # Update main app image tags
             find ${manifestsPath} -name "*.yaml" -o -name "*.yml" | while read file; do
                 echo "Processing: \$file"
-                sed -i 's|image: .*easy_shop-app:.*|image: \${env.IMAGE_NAME}:${imageTag}|g' "\$file"
+                sed -i 's|image: .*easy_shop-app:.*|image: \${env.IMAGE_NAME}:${imageTag}|g' "\$file" 
                 sed -i 's|image: .*migration:.*|image: \${env.MIGRATION_IMAGE_NAME}:${imageTag}|g' "\$file"
             done
             

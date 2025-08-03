@@ -1,15 +1,7 @@
 # 🚀 Quick Setup Instructions
 
-## Step 1: Initialize Git Repository
 
-```bash
-cd jenkins-shared-library
-git init
-git add .
-git commit -m "Initial Jenkins Shared Library setup"
-```
-
-## Step 2: Create GitHub Repository
+## Step 1: Create GitHub Repository
 
 1. Go to GitHub.com
 2. Click "New Repository"
@@ -17,16 +9,17 @@ git commit -m "Initial Jenkins Shared Library setup"
 4. **Don't** initialize with README (we already have one)
 5. Click "Create repository"
 
-## Step 3: Push to GitHub
+## Step 2: Push to GitHub
 
 ```bash
 # Replace 'your-username' with your actual GitHub username
 git remote add origin https://github.com/your-username/jenkins-shared-library.git
-git branch -M main
+git add .
+git commit -m "First commit"
 git push -u origin main
 ```
 
-## Step 4: Configure in Jenkins
+## Step 3: Configure in Jenkins
 
 1. Go to **Manage Jenkins** > **Configure System**
 2. Scroll to **Global Pipeline Libraries**
@@ -37,7 +30,7 @@ git push -u origin main
    - **Source Code Management**: Git
    - **Project Repository**: `https://github.com/your-username/jenkins-shared-library.git`
 
-## Step 5: Test Your Pipeline
+## Step 4: Test Your Pipeline
 
 Your `Jenkinsfile` is already configured to use the shared library with:
 ```groovy

@@ -15,8 +15,28 @@ def call(Map params) {
     echo "📄 Dockerfile: ${dockerfile}"
     echo "📁 Context: ${context}"
     
-    def image = docker.build("${imageName}:${imageTag}", "-f ${dockerfile} ${context}")
+    // Check if Dockerfile exists
+    if (!fileExists(dockerfile)) {
+        error "❌ Dockerfile not found: ${dockerfile}"
+    }
     
-    echo "✅ Docker image built successfully: ${imageName}:${imageTag}"
-    return image
+    // Check Docker availability
+    try {
+        sh 'docker --version'
+        echo "✅ Docker is available"
+    } catch (Exception e) {
+        error "❌ Docker is not available on this agent: ${e.getMessage()}"
+    }
+    
+    // List files to debug
+    echo "📋 Files in current directory:"
+    sh 'ls -la'
+    
+    try {
+        def image = docker.build("${imageName}:${imageTag}", "-f ${dockerfile} ${context}")
+        echo "✅ Docker image built successfully: ${imageName}:${imageTag}"
+        return image
+    } catch (Exception e) {
+        error "❌ Docker build failed: ${e.getMessage()}"
+    }
 }
