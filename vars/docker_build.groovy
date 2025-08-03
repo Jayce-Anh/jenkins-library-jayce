@@ -28,14 +28,16 @@ def call(Map params) {
         error "❌ Docker is not available on this agent: ${e.getMessage()}"
     }
     
-    // List files to debug
-    echo "📋 Files in current directory:"
-    sh 'ls -la'
+    // Verify current directory has necessary files
+    echo "📁 Working in directory: ${pwd()}"
     
     try {
-        def image = docker.build("${imageName}:${imageTag}", "-f ${dockerfile} ${context}")
+        // Build Docker image using shell command
+        sh "docker build -f ${dockerfile} -t ${imageName}:${imageTag} ${context}"
         echo "✅ Docker image built successfully: ${imageName}:${imageTag}"
-        return image
+        
+        // Return the image name for other functions to use
+        return "${imageName}:${imageTag}"
     } catch (Exception e) {
         error "❌ Docker build failed: ${e.getMessage()}"
     }

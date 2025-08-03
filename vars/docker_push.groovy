@@ -13,36 +13,60 @@ def call(Map params) {
     
     echo "🚀 Pushing Docker image: ${imageName}:${imageTag}"
     
-    if (registry) {
-        echo "📡 Registry: ${registry}"
-        
-        // Handle ECR registry
-        if (registry.contains('amazonaws.com')) {
-            echo "🔒 Detected AWS ECR registry"
-            docker.withRegistry("https://${registry}", "ecr:${getECRRegion(registry)}:${credentials}") {
-                def image = docker.image("${imageName}:${imageTag}")
-                image.push()
-                image.push('latest')
+    try {
+        if (registry) {
+            echo "📡 Registry: ${registry}"
+            
+            // Handle ECR registry
+            if (registry.contains('amazonaws.com')) {
+                echo "🔒 Detected AWS ECR registry"
+                def region = getECRRegion(registry)
+                
+                withCredentials([aws(credentialsId: credentials, region: region)]) {
+                    // Login to ECR
+                    sh "aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registry}"
+                    
+                    // Push image with specific tag
+                    sh "docker push ${imageName}:${imageTag}"
+                    
+                    // Tag and push as latest
+                    sh "docker tag ${imageName}:${imageTag} ${imageName}:latest"
+                    sh "docker push ${imageName}:latest"
+                }
+            } else {
+                // Handle other registries (Docker Hub, Harbor, etc.)
+                withCredentials([usernamePassword(credentialsId: credentials, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PASS')]) {
+                    // Login to registry
+                    sh "echo \$REGISTRY_PASS | docker login ${registry} --username \$REGISTRY_USER --password-stdin"
+                    
+                    // Push image with specific tag
+                    sh "docker push ${imageName}:${imageTag}"
+                    
+                    // Tag and push as latest
+                    sh "docker tag ${imageName}:${imageTag} ${imageName}:latest"
+                    sh "docker push ${imageName}:latest"
+                }
             }
         } else {
-            // Handle other registries (Docker Hub, Harbor, etc.)
-            docker.withRegistry("https://${registry}", credentials) {
-                def image = docker.image("${imageName}:${imageTag}")
-                image.push()
-                image.push('latest')
+            // Push to Docker Hub (default registry)
+            echo "🐳 Pushing to Docker Hub"
+            withCredentials([usernamePassword(credentialsId: credentials, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                // Login to Docker Hub
+                sh "echo \$DOCKER_PASS | docker login --username \$DOCKER_USER --password-stdin"
+                
+                // Push image with specific tag
+                sh "docker push ${imageName}:${imageTag}"
+                
+                // Tag and push as latest
+                sh "docker tag ${imageName}:${imageTag} ${imageName}:latest"
+                sh "docker push ${imageName}:latest"
             }
         }
-    } else {
-        // Push to Docker Hub (default registry)
-        echo "🐳 Pushing to Docker Hub"
-        docker.withRegistry('', credentials) {
-            def image = docker.image("${imageName}:${imageTag}")
-            image.push()
-            image.push('latest')
-        }
+        
+        echo "✅ Image pushed successfully: ${imageName}:${imageTag}"
+    } catch (Exception e) {
+        error "❌ Docker push failed: ${e.getMessage()}"
     }
-    
-    echo "✅ Image pushed successfully: ${imageName}:${imageTag}"
 }
 
 // Helper function to extract ECR region from registry URL
