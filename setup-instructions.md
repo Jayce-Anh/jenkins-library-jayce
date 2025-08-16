@@ -34,7 +34,7 @@ git push -u origin main
 
 Your `Jenkinsfile` is already configured to use the shared library with:
 ```groovy
-@Library('Shared') _
+@Library('share-jayce') _
 ```
 
 Run your Jenkins pipeline and it should now work! 🎉
